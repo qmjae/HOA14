@@ -1,0 +1,156 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  when: ansible_distribution == "Ubuntu"
+    
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - nova-api
+    - nova-conductor
+    - nova-novncproxy
+    - nova-scheduler
+    - placement-api
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Create Nova-API database
+  mysql_db:
+    name: nova_api
+    collation: utf8_general_ci
+    encoding: utf8
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Create Nova database
+  mysql_db:
+    name: nova
+    collation: utf8_general_ci
+    encoding: utf8
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Create Nova Cell database
+  mysql_db:
+    name: nova_cell0
+    collation: utf8_general_ci
+    encoding: utf8
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+- name: Create Placement database
+  mysql_db:
+    name: nova_cell0
+    collation: utf8_general_ci
+    encoding: utf8
+    state: present
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Grant Proper Access to Nova-API Database in Control Node
+  mysql_query:
+    login_user: root
+    login_password: ""
+    login_unix_socket: /var/lib/mysql/mysql.sock   
+    query: 
+      - GRANT ALL PRIVILEGES ON nova_api.* TO 'nova_api'@'localhost' IDENTIFIED BY 'admin';
+      - GRANT ALL PRIVILEGES ON nova_api.* TO 'nova_api'@'%' IDENTIFIED BY 'admin';
+    single_transaction: yes
+  failed_when: false
+  no_log: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Grant Proper Access to Nova Database in Control Node
+  mysql_query:
+    login_user: root
+    login_password: ""
+    login_unix_socket: /var/lib/mysql/mysql.sock   
+    query: 
+      - GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'admin';
+      - GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY 'admin';
+    single_transaction: yes
+  failed_when: false
+  no_log: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Grant Proper Access to Nova Cell Database in Control Node
+  mysql_query:
+    login_user: root
+    login_password: ""
+    login_unix_socket: /var/lib/mysql/mysql.sock   
+    query: 
+      - GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova_cell0'@'localhost' IDENTIFIED BY 'admin';
+      - GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova_cell0'@'%' IDENTIFIED BY 'admin';
+    single_transaction: yes
+  failed_when: false
+  no_log: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Grant Proper Access to Placement Database in Control Node
+  mysql_query:
+    login_user: root
+    login_password: ""
+    login_unix_socket: /var/lib/mysql/mysql.sock   
+    query: 
+      - GRANT ALL PRIVILEGES ON placement.* TO 'placement'@'localhost' IDENTIFIED BY 'admin';
+      - GRANT ALL PRIVILEGES ON placement.* TO 'placement'@'%' IDENTIFIED BY 'admin';
+    single_transaction: yes
+  failed_when: false
+  no_log: true
+  when: ansible_distribution == "Ubuntu"
+
+- name: Populate Nova-API Database 
+  command: "su -s /bin/sh -c 'nova-manage api_db sync' nova"
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Register Cell0 database 
+  command: "su -s /bin/sh -c 'nova-manage cell_v2 map_cell0' nova"
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Create Cell1 Cell 
+  command: "su -s /bin/sh -c 'nova-manage cell_v2 create_cell --name=cell1 --verbose' nova"
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Populate Nova Database
+  command: "su -s /bin/sh -c 'nova-manage db sync' nova"
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Configure Nova database connection in nova.conf
+  template:
+    src: nova.conf.j2
+    dest: /etc/nova/nova.conf
+  become: true
+  notify: Restart Nova services
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Configure Placement database connection in placement.conf
+  template:
+    src: placement.conf.j2
+    dest: /etc/placement/placement.conf
+  become: true
+  when: ansible_distribution == "Ubuntu"
+  
+- name: Install required packages
+  dnf:
+    name: "{{ item }}"
+    state: present
+    use_backend: dnf4
+  loop:
+    - openstack-nova-compute
+  when: ansible_distribution == "CentOS"
+
+- name: Configure Nova database connection in nova.conf in Compute Node
+  template:
+    src: nova-compute.conf.j2
+    dest: /etc/nova/nova.conf
+  become: true
+  when: ansible_distribution == "CentOS"
+  

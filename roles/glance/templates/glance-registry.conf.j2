@@ -1,0 +1,21 @@
+[database]
+# ...
+connection = mysql+pymysql://glance:glancepass@192.168.56.102/glance
+[keystone_authtoken]
+# ...
+auth_host = 192.168.56.102
+auth_port = 5000
+auth_protocol = http
+admin_tenant_name = service
+admin_user = glance
+admin_password = glance
+auth_uri = http://192.168.56.102:5000
+memcached_servers = 192.168.56.102:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+
+[paste_deploy]
+# ...
+flavor = keystone

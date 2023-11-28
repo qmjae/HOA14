@@ -1,0 +1,112 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+#- name: Install required packages
+#  apt:
+#    name: "{{ item }}"
+#    state: present
+#  loop:
+#    - glance
+
+#- name: Create Glance database
+#  mysql_db:
+#    name: glance
+#    collation: utf8_general_ci
+#    encoding: utf8
+#    state: present
+#  become: true
+
+#- name: Grant Proper Access to Glance Database in Control Node
+#  mysql_query:
+#    login_user: root
+#    login_password: ""
+#    login_unix_socket: /var/lib/mysql/mysql.sock   
+#    query: 
+#      - CREATE DATABASE glance;
+#      - GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'admin';
+#      - GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY 'admin';
+#    single_transaction: yes
+#  failed_when: false
+#  no_log: true
+#  when: ansible_distribution == "Ubuntu"
+
+- name: Configure Glance database connection in glance-api.conf
+  template:
+    src: glance-api.conf.j2
+    dest: /etc/glance/glance-api.conf
+  become: true
+  notify: Restart Glance API
+  
+- name: Configure Glance database connection in glance-registry.conf
+  template:
+    src: glance-registry.conf.j2
+    dest: /etc/glance/glance-registry.conf
+  become: true
+  notify: Restart Glance Registry
+  
+#- name: Create Glance database tables
+#  command: "su -s /bin/sh -c 'glance-manage db_sync' glance"
+#  become: true
+    
+#- name: Create Glance User in Control Node
+#  command: "openstack user create --domain default --password admin glance"
+#  environment:
+#    OS_USERNAME: admin
+#    OS_PASSWORD: "admin"
+#    OS_PROJECT_NAME: admin
+#    OS_USER_DOMAIN_NAME: Default
+#    OS_PROJECT_DOMAIN_NAME: Default
+#    OS_AUTH_URL: http://192.168.56.102:5000/v3
+#    OS_IDENTITY_API_VERSION: 3
+#  become: true
+  
+#- name: Create Glance Service Entity in Control Node
+#  command: "openstack service create --name glance --description 'OpenStack Image' image"
+# environment:
+#    OS_USERNAME: admin
+#    OS_PASSWORD: "admin"
+#    OS_PROJECT_NAME: admin
+#    OS_USER_DOMAIN_NAME: Default
+#    OS_PROJECT_DOMAIN_NAME: Default
+#    OS_AUTH_URL: http://192.168.56.102:5000/v3
+#    OS_IDENTITY_API_VERSION: 3
+#  become: true
+
+#- name: Create Public Image Service API Endpoints in Control Node
+#  command: "openstack endpoint create --region RegionOne image public http://192.168.56.102:9292 --os-image-api-version v2"
+#  environment:
+#    OS_USERNAME: admin
+#    OS_PASSWORD: "admin"
+#    OS_PROJECT_NAME: admin
+#    OS_USER_DOMAIN_NAME: Default
+#    OS_PROJECT_DOMAIN_NAME: Default
+#    OS_AUTH_URL: http://192.168.56.102:5000/v3
+#    OS_IDENTITY_API_VERSION: 3
+#  become: true
+
+#- name: Create Internal Image Service API Endpoints in Control Node
+#  command: "openstack endpoint create --region RegionOne image internal http://192.168.56.102:9292"
+#  environment:
+#    OS_USERNAME: admin
+#    OS_PASSWORD: "admin"
+#    OS_PROJECT_NAME: admin
+#    OS_USER_DOMAIN_NAME: Default
+#    OS_PROJECT_DOMAIN_NAME: Default
+#    OS_AUTH_URL: http://192.168.56.102:5000/v3
+#    OS_IDENTITY_API_VERSION: 3
+#  become: true
+  
+#- name: Create Admin Image Service API Endpoints in Control Node
+#  command: "openstack endpoint create --region RegionOne image admin http://192.168.56.102:9292"
+#  environment:
+#    OS_USERNAME: admin
+#    OS_PASSWORD: "admin"
+#    OS_PROJECT_NAME: admin
+#    OS_USER_DOMAIN_NAME: Default
+#    OS_PROJECT_DOMAIN_NAME: Default
+#    OS_AUTH_URL: http://192.168.56.102:5000/v3
+#    OS_IDENTITY_API_VERSION: 3
+#  become: true
+

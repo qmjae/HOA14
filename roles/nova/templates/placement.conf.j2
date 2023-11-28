@@ -1,0 +1,18 @@
+[placement_database]
+# ...
+connection = mysql+pymysql://placement:placement@192.168.56.102/placement
+[api]
+# ...
+auth_strategy = keystone
+
+[keystone_authtoken]
+# ...
+auth_url = http://192.168.56.102:5000/v3
+memcached_servers = 192.168.56.102:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = placement
+password = placement
+

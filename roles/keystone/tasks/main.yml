@@ -1,0 +1,106 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install required packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python3
+    - python3-pip
+    - virtualenv
+    - apache2
+    - libapache2-mod-wsgi-py3
+    - memcached
+    - python3-memcache
+    - mariadb-server
+    - python3-mysqldb
+    - keystone
+    - python3-openstackclient
+
+- name: Create Keystone database
+  mysql_db:
+    name: keystone
+    collation: utf8_general_ci
+    encoding: utf8
+    state: present
+  become: true
+  
+- name: Configure Keystone database connection in keystone.conf
+  template:
+    src: keystone.conf.j2
+    dest: /etc/keystone/keystone.conf
+  notify: Restart Apache
+  become: true
+
+- name: Create Keystone database tables
+  command: "su -s /bin/sh -c 'keystone-manage db_sync' keystone"
+  become: true
+
+- name: Create Keystone Fernet keys
+  command: "keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone"
+  become: true
+  
+- name: Create Keystone Credential Set Up
+  command: "keystone-manage credential_setup --keystone-user keystone --keystone-group keystone"
+  become: true
+
+- name: Bootstrap Keystone
+  command: "keystone-manage bootstrap --bootstrap-password admin --bootstrap-admin-url http://192.168.56.102:5000/v3/ --bootstrap-internal-url http://192.168.56.102:5000/v3/ --bootstrap-public-url http://192.168.56.102:5000/v3/ --bootstrap-region-id RegionOne"
+  become: true
+  environment:
+    OS_USERNAME: admin
+    OS_PASSWORD: "admin"
+    OS_PROJECT_NAME: admin
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_AUTH_URL: http://192.168.56.102:5000/v3
+    OS_IDENTITY_API_VERSION: 3
+
+- name: Configure Apache for Keystone
+  template:
+    src: keystone-apache.conf.j2
+    dest: /etc/apache2/sites-available/wsgi-keystone.conf
+  notify: Restart Apache
+
+- name: Enable Keystone virtual host
+  command: "a2ensite wsgi-keystone"
+  notify: Restart Apache
+
+- name: Remove the default Apache virtual host
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+  notify: Restart Apache
+
+- name: Restart Apache
+  systemd:
+    name: apache2
+    state: restarted
+
+#- name: Create Keystone service entity
+#  command: "openstack service create --name keystone --description 'OpenStack Identity' identity"
+#  environment:
+#    OS_USERNAME: admin
+#   OS_PASSWORD: "admin"
+#    OS_PROJECT_NAME: admin
+#    OS_USER_DOMAIN_NAME: Default
+#    OS_PROJECT_DOMAIN_NAME: Default
+#    OS_AUTH_URL: http://192.168.56.102:5000/v3
+#    OS_IDENTITY_API_VERSION: 3
+#  become: true
+
+#- name: Create Keystone endpoint
+#  command: "openstack endpoint create --region RegionOne identity public http://192.168.56.102:5000/v3"
+#  environment:
+#    OS_USERNAME: admin
+#    OS_PASSWORD: "admin"
+#    OS_PROJECT_NAME: admin
+#    OS_USER_DOMAIN_NAME: Default
+#    OS_PROJECT_DOMAIN_NAME: Default
+#    OS_AUTH_URL: http://192.168.56.102:5000/v3
+#    OS_IDENTITY_API_VERSION: 3
+#  become: true
+

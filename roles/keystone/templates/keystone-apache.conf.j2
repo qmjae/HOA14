@@ -1,0 +1,24 @@
+# Update the VirtualHost sections as follows:
+
+<VirtualHost *:5000>
+    WSGIScriptAlias / /usr/bin/keystone-wsgi-public
+    WSGIPassAuthorization On
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/apache2/keystone_public.log
+    CustomLog /var/log/apache2/access_public.log combined
+    <Directory /usr/bin>
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+<VirtualHost *:35357>
+    WSGIScriptAlias / /usr/bin/keystone-wsgi-admin
+    WSGIPassAuthorization On
+    ErrorLogFormat "%{cu}t %M"
+    ErrorLog /var/log/apache2/keystone_admin.log
+    CustomLog /var/log/apache2/access_admin.log combined
+    <Directory /usr/bin>
+        Require all granted
+    </Directory>
+</VirtualHost>
+

@@ -1,0 +1,14 @@
+---
+- name: OpenStack Keystone Glance and Nova Installation
+ # hosts: controller
+#  become: true
+#  roles:
+#   - keystone
+#   - glance
+#   - nova
+    
+  hosts: compute
+  become: true
+  roles:
+    - nova
+

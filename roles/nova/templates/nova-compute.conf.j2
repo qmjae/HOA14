@@ -1,0 +1,59 @@
+[DEFAULT]
+# ...
+enabled_apis = osapi_compute,metadata
+[DEFAULT]
+# ...
+transport_url = rabbit://openstack:2111419@192.168.56.102/
+[api]
+# ...
+auth_strategy = keystone
+
+[keystone_authtoken]
+# ...
+www_authenticate_uri = http://192.168.56.102:5000/
+auth_url = http://192.168.56.102:5000/
+memcached_servers = 192.168.56.102:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = nova
+password = novapass
+[service_user]
+send_service_user_token = true
+auth_url = https://192.168.56.102/identity
+auth_strategy = keystone
+auth_type = password
+project_domain_name = Default
+project_name = service
+user_domain_name = Default
+username = nova
+password = novapass
+[DEFAULT]
+# ...
+my_ip = 192.168.56.104
+[vnc]
+# ...
+enabled = true
+server_listen = 0.0.0.0
+server_proxyclient_address = $my_ip
+novncproxy_base_url = http://192.168.56.102:6080/vnc_auto.html
+[glance]
+# ...
+api_servers = http://192.168.56.102:9292
+[oslo_concurrency]
+# ...
+lock_path = /var/lib/nova/tmp
+[placement]
+# ...
+region_name = RegionOne
+project_domain_name = Default
+project_name = service
+auth_type = password
+user_domain_name = Default
+auth_url = http://192.168.56.102:5000/v3
+username = placement
+password = placemnt
+[libvirt]
+# ...
+virt_type = qemu

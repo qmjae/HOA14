@@ -1,0 +1,45 @@
+[database]
+# ...
+connection = mysql+pymysql://glance:glancepass@192.168.56.102/glance
+
+[keystone_authtoken]
+# ...
+auth_host = 192.168.56.102
+auth_port = 5000
+auth_protocol = http
+admin_tenant_name = service
+admin_user = glance
+admin_password = glance
+auth_uri = http://192.168.56.102:5000
+memcached_servers = 192.168.56.102:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+service_token_roles_required = True
+[paste_deploy]
+# ...
+flavor = keystone
+
+[DEFAULT]
+# ...
+enabled_backends=fs:file
+bind_host = 192.168.56.102
+bind_port = 5000
+[glance_store]
+# ...
+default_backend = fs
+default_store = file
+[fs]
+filesystem_store_datadir = /var/lib/glance/images/
+
+[oslo_limit]
+auth_url = http://192.168.56.102:5000
+auth_type = password
+user_domain_id = default
+username = glance
+system_scope = all
+password = glancepass
+endpoint_id = 340be3625e9b4239a6415d034e98aace
+region_name = RegionOne
+

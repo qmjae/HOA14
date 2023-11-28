@@ -1,0 +1,11 @@
+---
+- name: Restart Nova services
+  systemd:
+    name: "{{ item }}"
+    state: restarted
+  loop:
+    - openstack-nova-api
+    - openstack-nova-conductor
+    - openstack-nova-novncproxy
+    - openstack-nova-scheduler
+   
